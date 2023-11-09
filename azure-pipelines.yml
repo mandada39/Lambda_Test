@@ -1,0 +1,40 @@
+trigger ]:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.9'
+    addToPath: true
+  displayName: 'Install python'
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.10'
+    addToPath: true
+  displayName: 'Install python'
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.11'
+    addToPath: true
+  displayName: 'Install python'
+
+- script: |
+    cd /tmp
+    mkdir ${Lambda_Name}
+    cd ${Lambda_Name}
+    mkdir package
+    pip install --target package/ -r ${Requirment_Filename} --platform manylinux2014_$(Arch_Type) --only-binary=:all:
+    cd package
+    rm -rf __pycache__
+    zip -r .. /${Lambda_Name}.zip .
+    cd ..
+#zip ${Lambda_Name}.zip *.py
+    aws s3 cp ${Lambda_Name} s3://${Artifact_Bucket}/lambda-packages/$(Build)/$(BuildNumber)/   --recursive
+    cd /tmp
+    rm -rf ${Lambda_Name}
+
